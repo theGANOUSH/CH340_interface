@@ -42,6 +42,7 @@ public partial class MainForm : Form
 		sendbtn.Enabled = false;
 		setbtn.Enabled = false;
 		txtextbox.Enabled = false;
+		usernametxtbox.Enabled = true;
 		
 		/*
 		* need to populate serial ports in dropdown when first starting
@@ -62,9 +63,9 @@ public partial class MainForm : Form
 	void Button1Click(object sender, EventArgs e)
 	{
 		if(!connected && connect_ready) {
-			connected = true;
-			connectbtn.Text = "Disconnect";
-			baud = baudcombobox.SelectedIndex;
+//			connected = true;
+//			connectbtn.Text = "Disconnect";
+//			baud = baudcombobox.SelectedIndex;
 			
 			//check if any null
 			if(baud == -1) baud = 2;
@@ -72,6 +73,11 @@ public partial class MainForm : Form
 			int baudr;
 			Int32.TryParse(baudcombobox.Items[baud].ToString(), out baudr);
 			if(connect_ready) {
+				connected = true;
+				connectbtn.Text = "Disconnect";
+				baud = baudcombobox.SelectedIndex;
+				usernametxtbox.Enabled = false;
+
 				try {
 					COMport = new SerialPort(portcombobox.Text, baudr);
 					COMport.BaudRate = baudr;
@@ -102,6 +108,7 @@ public partial class MainForm : Form
 				sendbtn.Enabled = false;
 				setbtn.Enabled = false;
 				txtextbox.Enabled = false;
+				usernametxtbox.Enabled = true;
 			}
 		}
 		
@@ -113,7 +120,13 @@ public partial class MainForm : Form
 		*/
 		void Button2Click(object sender, EventArgs e)
 		{
-			COMport.WriteLine(txtextbox.Text.ToUpper()+"\r\n");
+			if(txtextbox.Text.ToUpper().Contains("AT+") || txtextbox.Text.ToUpper().Contains("AT?")) {
+//				COMport.WriteLine(txtextbox.Text.ToUpper()+"\r\n");
+				SendText(txtextbox.Text.ToUpper());
+			} else {
+//				COMport.WriteLine(usernametxtbox.Text+":> "+txtextbox.Text+"\r\n");
+				SendText(usernametxtbox.Text+":> "+txtextbox.Text);
+			}
 			txtextbox.Clear();
 		}
 		
@@ -214,13 +227,17 @@ public partial class MainForm : Form
 			if(freq == -1) freq = 0;
 			
 			rxtextbox.AppendText("Setting\r\n");
-			COMport.WriteLine("AT+RATE="+rate+"\r\n");
+//			COMport.WriteLine("AT+RATE="+rate+"\r\n");
+			SendText("AT+RATE="+rate);
 			Thread.Sleep(500);
-			COMport.WriteLine("AT+FREQ="+freqcombobox.Items[freq]+"G\r\n");
+//			COMport.WriteLine("AT+FREQ="+freqcombobox.Items[freq]+"G\r\n");
+			SendText("AT+FREQ="+freqcombobox.Items[freq]+"G");
 			Thread.Sleep(500);
-			COMport.WriteLine("AT+RXA="+rxadd+"\r\n");
+//			COMport.WriteLine("AT+RXA="+rxadd+"\r\n");
+			SendText("AT+RXA="+rxadd);
 			Thread.Sleep(500);
-			COMport.WriteLine("AT+TXA="+txadd+"\r\n");
+//			COMport.WriteLine("AT+TXA="+txadd+"\r\n");
+			SendText("AT+TXA="+txadd);
 		}
 		
 		/*
@@ -243,6 +260,12 @@ public partial class MainForm : Form
 				if(!portcombobox.Items.Contains(port)) portcombobox.Items.Add(port);
 			}
 			portcombobox.Enabled = true;
+		}
+		
+		void SendText(string text)
+		{
+			COMport.WriteLine(text+"\r\n");
+			this.rxtextbox.AppendText(text+"\r\n");
 		}
 	}
 }

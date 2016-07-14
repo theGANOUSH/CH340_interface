@@ -28,6 +28,7 @@ namespace CH340_interface
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.Button setbtn;
 		private System.Windows.Forms.Button rescanbtn;
+		private System.Windows.Forms.TextBox usernametxtbox;
 		
 		/// <summary>
 		/// Disposes resources used by the form.
@@ -64,6 +65,7 @@ namespace CH340_interface
 			this.label2 = new System.Windows.Forms.Label();
 			this.setbtn = new System.Windows.Forms.Button();
 			this.rescanbtn = new System.Windows.Forms.Button();
+			this.usernametxtbox = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// portcombobox
@@ -115,6 +117,7 @@ namespace CH340_interface
 			// txtextbox
 			// 
 			this.txtextbox.Location = new System.Drawing.Point(95, 206);
+			this.txtextbox.MaxLength = 128;
 			this.txtextbox.Name = "txtextbox";
 			this.txtextbox.Size = new System.Drawing.Size(377, 20);
 			this.txtextbox.TabIndex = 4;
@@ -335,11 +338,21 @@ namespace CH340_interface
 			this.rescanbtn.UseVisualStyleBackColor = true;
 			this.rescanbtn.Click += new System.EventHandler(this.RescanbtnClick);
 			// 
+			// usernametxtbox
+			// 
+			this.usernametxtbox.Location = new System.Drawing.Point(333, 178);
+			this.usernametxtbox.MaxLength = 8;
+			this.usernametxtbox.Name = "usernametxtbox";
+			this.usernametxtbox.Size = new System.Drawing.Size(139, 20);
+			this.usernametxtbox.TabIndex = 14;
+			this.usernametxtbox.Text = "Username";
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(484, 243);
+			this.Controls.Add(this.usernametxtbox);
 			this.Controls.Add(this.rescanbtn);
 			this.Controls.Add(this.setbtn);
 			this.Controls.Add(this.label2);
