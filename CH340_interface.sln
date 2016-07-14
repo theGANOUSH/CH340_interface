@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 5.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CH340_interface", "CH340_interface\CH340_interface.csproj", "{5DC0CFC9-C642-4454-ABC1-E62DD84EB93C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5DC0CFC9-C642-4454-ABC1-E62DD84EB93C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DC0CFC9-C642-4454-ABC1-E62DD84EB93C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DC0CFC9-C642-4454-ABC1-E62DD84EB93C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DC0CFC9-C642-4454-ABC1-E62DD84EB93C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

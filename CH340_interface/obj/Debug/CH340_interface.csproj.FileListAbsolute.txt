@@ -1,0 +1,8 @@
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\obj\Debug\CH340_interface.csprojResolveAssemblyReference.cache
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\obj\Debug\CH340_interface.MainForm.resources
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\obj\Debug\CH340_interface.csproj.GenerateResource.Cache
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\bin\Debug\CH340 Terminal.exe.config
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\bin\Debug\CH340 Terminal.exe
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\bin\Debug\CH340 Terminal.pdb
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\obj\Debug\CH340 Terminal.exe
+C:\Users\Michal\Documents\SharpDevelop Projects\CH340_interface\CH340_interface\obj\Debug\CH340 Terminal.pdb
