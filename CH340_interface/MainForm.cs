@@ -7,8 +7,6 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 using System.IO.Ports;
 using System.Threading;
@@ -16,7 +14,9 @@ using System.Threading;
 namespace CH340_interface
 {
 	/// <summary>
-	/// Description of MainForm.
+	/// Simple terminal interface, scans for ports, once connected allows
+	/// user to connect to device, set parameters such as baud rate, addresses,
+	/// etc, and send/recieve messages
 	/// </summary>
 	public partial class MainForm : Form
 	{
@@ -43,13 +43,22 @@ namespace CH340_interface
 			setbtn.Enabled = false;
 			txtextbox.Enabled = false;
 
-			ports = SerialPort.GetPortNames();
-			foreach(string port in ports) {
-				portcombobox.Items.Add(port);
-			}
-			portcombobox.Enabled = true;
-			
+			/*
+			 * need to populate serial ports in dropdown when first starting
+			 * EDIT: removed duplicate code, now it just calls the rescan
+			 * button, which does the exact same thing
+			 */
+			RescanbtnClick(this, new EventArgs());
 		}
+		
+		/*
+		 * This is needed to check whether it's already connected or not, 
+		 * or if the connection is ready. Some of the args from the dropdowns
+		 * cant be used directly but some can, so just do a little magic
+		 * to either extract the index number+1 (since device has non-zero
+		 * indeces) or the actual value such as the frequency
+		 * Button will toggle
+		 */
 		void Button1Click(object sender, EventArgs e)
 		{
 			if(!connected && connect_ready) {
@@ -98,11 +107,22 @@ namespace CH340_interface
 				txtextbox.Enabled = false;
 			}
 		}
+		
+		/*
+		 * Text in box needs to be converted when doing AT commands,
+		 * and since I'm lazy I just make everything uppercase
+		 * and terminate with a carriage return and new line
+		 * The textbox has no history function either
+		 */
 		void Button2Click(object sender, EventArgs e)
 		{
 			COMport.WriteLine(txtextbox.Text.ToUpper()+"\r\n");
 			txtextbox.Clear();
 		}
+		
+		/*
+		 * if no com port then disable other boxes
+		 */
 		void PortChoose(object sender, EventArgs e)
 		{
 			if(portcombobox.SelectedIndex != -1) {
@@ -120,17 +140,36 @@ namespace CH340_interface
 				connect_ready = false;
 			}
 		}
+		
+		/*
+		 * only allows HEX characters in the address textboxes since
+		 * we dont want illegal characters or screw ups
+		 * The setting function parses this data out anyway
+		 */
 		void textBox_KeyPress(object sender, KeyPressEventArgs e)
-	    {
+		{
 			e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar)
 				&& (e.KeyChar != 'a') && (e.KeyChar != 'b') && (e.KeyChar != 'c') && (e.KeyChar != 'd') 
-				&& (e.KeyChar != 'e') && (e.KeyChar != 'f') && (e.KeyChar != 'x');
-	    }
+				&& (e.KeyChar != 'e') && (e.KeyChar != 'f');
+		}
+		
+		/*
+		 * pressing enter in the text box is the same as
+		 * clicking the Tx button
+		 */
 		void enter_KeyPress(object sender, KeyPressEventArgs e)
-	    {
+		{
 			if(e.KeyChar == (char)Keys.Enter) Button2Click(this, new EventArgs());
-	    }
+		}
 
+		/*
+		 * simple handler for the serial port needed since data
+		 * will come asynchronously and needs to be written to
+		 * the Rx textbox
+		 * it's a little messy since apparantely accessing the rx textbox
+		 * from another thread breaks the universe so get around it
+		 * by using a delegate, whatever that is
+		 */
 		private void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
 		{
 		    SerialPort sp = (SerialPort)sender;
@@ -139,6 +178,13 @@ namespace CH340_interface
 		
 		delegate void SetTextCallback(string text);
 		
+		/*
+		 * needed for preventing the whole thing from breaking
+		 * I don't actually know how this works or what it's doing
+		 * exactly, but I think it's making a new object from 
+		 * the received text, then safely passing it to the 
+		 * textbox? I dunno
+		 */
 		private void SetText(string text)
 		{
 			if(this.rxtextbox.InvokeRequired) {
@@ -149,6 +195,15 @@ namespace CH340_interface
 //				Console.WriteLine(text);
 			}
 		}
+		
+		/*
+		 * needed a quick way to set a bunch of parameters at once
+		 * this seemed like the best way without having to
+		 * do a bunch of AT commands
+		 * Need 0.5sec between each one just so it can breathe
+		 * a little
+		 * also checks if fields are empty and uses defaults
+		 */
 		void SetbtnClick(object sender, EventArgs e)
 		{
 			rate = ratecombobox.SelectedIndex+1;
@@ -176,6 +231,20 @@ namespace CH340_interface
 //			Console.WriteLine("AT+RXA="+rxadd+"\r\n");
 //			Console.WriteLine("AT+TXA="+txadd+"\r\n");
 		}
+		
+		/*
+		 * cant connect without first scanning the ports and
+		 * populating the device list
+		 * tried using a usb library to actually claim and
+		 * control the usb interface, but apparently these
+		 * devices aren't visible as usb devices and are
+		 * instead serial com ports, so that simplifies
+		 * things a lot
+		 * this app does also check if the com port is
+		 * busy or not and tells you, so if you run
+		 * multiple instances of this you'll see the
+		 * device but shouldn't be able to connect
+		 */
 		void RescanbtnClick(object sender, EventArgs e)
 		{
 			ports = SerialPort.GetPortNames();
