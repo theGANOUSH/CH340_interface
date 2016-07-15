@@ -29,6 +29,8 @@ namespace CH340_interface
 		private System.Windows.Forms.Button setbtn;
 		private System.Windows.Forms.Button rescanbtn;
 		private System.Windows.Forms.TextBox usernametxtbox;
+		private System.Windows.Forms.CheckBox cryptoOPT;
+		private System.Windows.Forms.TextBox passwordbox;
 		
 		/// <summary>
 		/// Disposes resources used by the form.
@@ -66,6 +68,8 @@ namespace CH340_interface
 			this.setbtn = new System.Windows.Forms.Button();
 			this.rescanbtn = new System.Windows.Forms.Button();
 			this.usernametxtbox = new System.Windows.Forms.TextBox();
+			this.cryptoOPT = new System.Windows.Forms.CheckBox();
+			this.passwordbox = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// portcombobox
@@ -343,15 +347,38 @@ namespace CH340_interface
 			this.usernametxtbox.Location = new System.Drawing.Point(333, 178);
 			this.usernametxtbox.MaxLength = 8;
 			this.usernametxtbox.Name = "usernametxtbox";
-			this.usernametxtbox.Size = new System.Drawing.Size(139, 20);
+			this.usernametxtbox.Size = new System.Drawing.Size(58, 20);
 			this.usernametxtbox.TabIndex = 14;
-			this.usernametxtbox.Text = "Username";
+			this.usernametxtbox.Text = "user";
+			// 
+			// cryptoOPT
+			// 
+			this.cryptoOPT.Checked = true;
+			this.cryptoOPT.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.cryptoOPT.Location = new System.Drawing.Point(332, 151);
+			this.cryptoOPT.Name = "cryptoOPT";
+			this.cryptoOPT.Size = new System.Drawing.Size(59, 24);
+			this.cryptoOPT.TabIndex = 15;
+			this.cryptoOPT.Text = "DES";
+			this.cryptoOPT.UseVisualStyleBackColor = true;
+			// 
+			// passwordbox
+			// 
+			this.passwordbox.Location = new System.Drawing.Point(398, 179);
+			this.passwordbox.MaxLength = 32;
+			this.passwordbox.Name = "passwordbox";
+			this.passwordbox.PasswordChar = '*';
+			this.passwordbox.Size = new System.Drawing.Size(74, 20);
+			this.passwordbox.TabIndex = 16;
+			this.passwordbox.Text = "pass";
 			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(484, 243);
+			this.Controls.Add(this.passwordbox);
+			this.Controls.Add(this.cryptoOPT);
 			this.Controls.Add(this.usernametxtbox);
 			this.Controls.Add(this.rescanbtn);
 			this.Controls.Add(this.setbtn);

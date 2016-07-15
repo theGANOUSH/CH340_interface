@@ -8,8 +8,11 @@
 */
 using System;
 using System.Windows.Forms;
+using System.IO;
 using System.IO.Ports;
 using System.Threading;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CH340_interface
 {
@@ -17,6 +20,8 @@ namespace CH340_interface
 /// Simple terminal interface, scans for ports, once connected allows
 /// user to connect to device, set parameters such as baud rate, addresses,
 /// etc, and send/recieve messages
+/// added encryption using DES, if want RSA use the link below, more complicated
+/// http://stackoverflow.com/questions/17128038/c-sharp-rsa-encryption-decryption-with-transmission
 /// </summary>
 public partial class MainForm : Form
 {
@@ -30,6 +35,7 @@ public partial class MainForm : Form
 	public static int freq;
 	public static string rxadd;
 	public static string txadd;
+	public static int AT_CMD_MODE;
 	
 	public MainForm()
 	{
@@ -43,6 +49,8 @@ public partial class MainForm : Form
 		setbtn.Enabled = false;
 		txtextbox.Enabled = false;
 		usernametxtbox.Enabled = true;
+		passwordbox.Enabled = true;
+		cryptoOPT.Enabled = true;
 		
 		/*
 		* need to populate serial ports in dropdown when first starting
@@ -59,9 +67,17 @@ public partial class MainForm : Form
 	* to either extract the index number+1 (since device has non-zero
 	* indeces) or the actual value such as the frequency
 	* Button will toggle
+	* First thing it checks for is if the password used is less than 8
+	* characters, if it is, it pops a message and tells you to use a better password.
+	* Program should not connect if this is the case. But luckily it only does this when
+	* the DES option is enabled.
 	*/
 	void Button1Click(object sender, EventArgs e)
 	{
+		if(cryptoOPT.CheckState == CheckState.Checked && passwordbox.Text.Length < 8) {
+			MessageBox.Show("Password must be a minimum of 8 characters", "ENCRYPTION ON", MessageBoxButtons.OK);
+			return;
+		}
 		if(!connected && connect_ready) {
 //			connected = true;
 //			connectbtn.Text = "Disconnect";
@@ -77,6 +93,8 @@ public partial class MainForm : Form
 				connectbtn.Text = "Disconnect";
 				baud = baudcombobox.SelectedIndex;
 				usernametxtbox.Enabled = false;
+				passwordbox.Enabled = false;
+				cryptoOPT.Enabled = false;
 
 				try {
 					COMport = new SerialPort(portcombobox.Text, baudr);
@@ -109,6 +127,8 @@ public partial class MainForm : Form
 				setbtn.Enabled = false;
 				txtextbox.Enabled = false;
 				usernametxtbox.Enabled = true;
+				passwordbox.Enabled = true;
+				cryptoOPT.Enabled = true;
 			}
 		}
 		
@@ -117,15 +137,17 @@ public partial class MainForm : Form
 		* and since I'm lazy I just make everything uppercase
 		* and terminate with a carriage return and new line
 		* The textbox has no history function either
+		* 0 indicates local for AT commands,
+		* 1 indicates to actually send to someone, used for DES encryption
 		*/
 		void Button2Click(object sender, EventArgs e)
 		{
-			if(txtextbox.Text.ToUpper().Contains("AT+") || txtextbox.Text.ToUpper().Contains("AT?")) {
+			if((txtextbox.Text.ToUpper().Contains("AT?") && txtextbox.Text.Length <= "AT?".Length) || (txtextbox.Text.ToUpper().Contains("AT+") && txtextbox.Text.Length <= "AT+FREQ=2.400G".Length)) {
 //				COMport.WriteLine(txtextbox.Text.ToUpper()+"\r\n");
-				SendText(txtextbox.Text.ToUpper());
+				SendText(txtextbox.Text.ToUpper(), 0);
 			} else {
 //				COMport.WriteLine(usernametxtbox.Text+":> "+txtextbox.Text+"\r\n");
-				SendText(usernametxtbox.Text+":> "+txtextbox.Text);
+				SendText(txtextbox.Text, 1);
 			}
 			txtextbox.Clear();
 		}
@@ -194,6 +216,9 @@ public partial class MainForm : Form
 		* exactly, but I think it's making a new object from 
 		* the received text, then safely passing it to the 
 		* textbox? I dunno
+		* Since adding encryption, it has to look for the AT command
+		* more precisely, which uses the AT flag set by the SendText method,
+		* otherwise it all breaks.
 		*/
 		private void SetText(string text)
 		{
@@ -201,7 +226,13 @@ public partial class MainForm : Form
 				SetTextCallback d = new SetTextCallback(SetText);
 				this.Invoke(d, new object[] { text });
 			} else {
-				this.rxtextbox.AppendText(text);
+				if(cryptoOPT.CheckState == CheckState.Checked && AT_CMD_MODE == 0) {
+					this.rxtextbox.AppendText("DES--> "+Decrypt(text, passwordbox.Text));
+				} else if(AT_CMD_MODE == 1) {
+					this.rxtextbox.AppendText(text);
+				} else {
+					this.rxtextbox.AppendText(text);
+				}
 			}
 		}
 		
@@ -228,16 +259,16 @@ public partial class MainForm : Form
 			
 			rxtextbox.AppendText("Setting\r\n");
 //			COMport.WriteLine("AT+RATE="+rate+"\r\n");
-			SendText("AT+RATE="+rate);
+			SendText("AT+RATE="+rate,0);
 			Thread.Sleep(500);
 //			COMport.WriteLine("AT+FREQ="+freqcombobox.Items[freq]+"G\r\n");
-			SendText("AT+FREQ="+freqcombobox.Items[freq]+"G");
+			SendText("AT+FREQ="+freqcombobox.Items[freq]+"G",0);
 			Thread.Sleep(500);
 //			COMport.WriteLine("AT+RXA="+rxadd+"\r\n");
-			SendText("AT+RXA="+rxadd);
+			SendText("AT+RXA="+rxadd,0);
 			Thread.Sleep(500);
 //			COMport.WriteLine("AT+TXA="+txadd+"\r\n");
-			SendText("AT+TXA="+txadd);
+			SendText("AT+TXA="+txadd,0);
 		}
 		
 		/*
@@ -262,10 +293,110 @@ public partial class MainForm : Form
 			portcombobox.Enabled = true;
 		}
 		
-		void SendText(string text)
+		/*
+		 * needed to make a standard way of sending text
+		 * this takes the input text and depending on security
+		 * it will either encrypt it or not
+		 * it checks for AT commands vs actual text
+		 * Actual text will always go through encryption (if chosen)
+		 * and will transmit
+		 * AT commands need a flag for the delegate text handler or 
+		 * it breaks
+		 * The type of text coming in will determine if it's AT or text
+		 * textmode = 1 when sending text
+		 * textmode = 0 when sending AT commands
+		 */
+		void SendText(string text, int textmode)
 		{
-			COMport.WriteLine(text+"\r\n");
-			this.rxtextbox.AppendText(text+"\r\n");
+			if(textmode == 0 && cryptoOPT.CheckState == CheckState.Unchecked) {
+				AT_CMD_MODE = 1;
+				COMport.WriteLine(text+"\r\n");
+				this.rxtextbox.AppendText(text+"\r\n");
+				Console.WriteLine("non crypto, unchecked");
+			} else if(textmode == 0 && cryptoOPT.CheckState == CheckState.Checked) {
+				AT_CMD_MODE = 1;
+				COMport.WriteLine(text+"\r\n");
+				this.rxtextbox.AppendText(text+"\r\n");
+				Console.WriteLine("non crypto, checked");
+			} else if(textmode == 1 && cryptoOPT.CheckState == CheckState.Checked) {
+				AT_CMD_MODE = 0;
+				var enc_text = Encrypt(usernametxtbox.Text+":> "+text, passwordbox.Text);
+//				var enc_text = Encrypt(text, passwordbox.Text);
+//				COMport.WriteLine(usernametxtbox.Text+":> "+enc_text+"\r\n");
+				COMport.WriteLine(enc_text+"\r\n");
+				this.rxtextbox.AppendText(usernametxtbox.Text+":> "+text+"\r\n");
+				this.rxtextbox.AppendText("DES<-- "+enc_text+"\r\n");
+			} else if(textmode == 1 && cryptoOPT.CheckState == CheckState.Unchecked) {
+				AT_CMD_MODE = 0;
+				COMport.WriteLine(usernametxtbox.Text+":> "+text+"\r\n");
+				this.rxtextbox.AppendText(usernametxtbox.Text+":> "+text+"\r\n");
+			}
+		}
+		
+		/*
+		 * DES encryption using a password as the key and init vector
+		 * This password is what's shared between talking users so they
+		 * can decrypt messages. It MUST be minimum 8 characters or this
+		 * breaks. It can be more than 8 but only the first 8 are actually used
+		 */
+		public static string Encrypt(string message, string password)
+		{
+			// Encode message and password
+			byte[] messageBytes = ASCIIEncoding.ASCII.GetBytes(message);
+			byte[] passwordBytes = ASCIIEncoding.ASCII.GetBytes(password.Substring(0, 8));
+			
+			// Set encryption settings -- Use password for both key and init. vector
+			var provider = new DESCryptoServiceProvider();
+			ICryptoTransform transform = provider.CreateEncryptor(passwordBytes, passwordBytes);
+			CryptoStreamMode mode = CryptoStreamMode.Write;
+			
+			// Set up streams and encrypt
+			var memStream = new MemoryStream();
+			var cryptoStream = new CryptoStream(memStream, transform, mode);
+			cryptoStream.Write(messageBytes, 0, messageBytes.Length);
+			cryptoStream.FlushFinalBlock();
+			
+			// Read the encrypted message from the memory stream
+			var encryptedMessageBytes = new byte[memStream.Length];
+			memStream.Position = 0;
+			memStream.Read(encryptedMessageBytes, 0, encryptedMessageBytes.Length);
+			
+			// Encode the encrypted message as base64 string
+			string encryptedMessage = Convert.ToBase64String(encryptedMessageBytes);
+			
+			return encryptedMessage; 
+		}
+		
+		/*
+		 * DES decryptor which behaves like the encryptor
+		 * except backwards
+		 */
+		public static string Decrypt(string encryptedMessage, string password)
+		{
+			// Convert encrypted message and password to bytes
+			byte[] encryptedMessageBytes = Convert.FromBase64String(encryptedMessage);
+			byte[] passwordBytes = ASCIIEncoding.ASCII.GetBytes(password.Substring(0, 8));
+			
+			// Set encryption settings -- Use password for both key and init. vector
+			var provider = new DESCryptoServiceProvider();
+			ICryptoTransform transform = provider.CreateDecryptor(passwordBytes, passwordBytes);
+			CryptoStreamMode mode = CryptoStreamMode.Write;
+			
+			// Set up streams and decrypt
+			var memStream = new MemoryStream();
+			var cryptoStream = new CryptoStream(memStream, transform, mode);
+			cryptoStream.Write(encryptedMessageBytes, 0, encryptedMessageBytes.Length);
+			cryptoStream.FlushFinalBlock();
+			
+			// Read decrypted message from memory stream
+			var decryptedMessageBytes = new byte[memStream.Length];
+			memStream.Position = 0;
+			memStream.Read(decryptedMessageBytes, 0, decryptedMessageBytes.Length);
+			
+			// Encode deencrypted binary data to base64 string
+			string message = ASCIIEncoding.ASCII.GetString(decryptedMessageBytes);
+			
+			return message;
 		}
 	}
 }
