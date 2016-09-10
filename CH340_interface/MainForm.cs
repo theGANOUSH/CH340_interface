@@ -13,6 +13,7 @@ using System.IO.Ports;
 using System.Threading;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace CH340_interface
 {
@@ -397,6 +398,18 @@ public partial class MainForm : Form
 			string message = ASCIIEncoding.ASCII.GetString(decryptedMessageBytes);
 			
 			return message;
+		}
+		
+		public static string serializeData<T>(T serializableObject)
+		{
+			if(serializableObject == null) return "";
+			
+			var xmlserializer = new XmlSerializer(serializableObject.GetType());
+			
+			using (StringWriter textwriter = new StringWriter()){
+				xmlserializer.Serialize(textwriter, serializableObject);
+				return textwriter.ToString();
+			}
 		}
 	}
 }
