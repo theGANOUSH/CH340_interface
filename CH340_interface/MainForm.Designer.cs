@@ -29,8 +29,10 @@ namespace CH340_interface
 		private System.Windows.Forms.Button setbtn;
 		private System.Windows.Forms.Button rescanbtn;
 		private System.Windows.Forms.TextBox usernametxtbox;
-		private System.Windows.Forms.CheckBox cryptoOPT;
 		private System.Windows.Forms.TextBox passwordbox;
+		private System.Windows.Forms.ComboBox encryptOption;
+		private System.Windows.Forms.ComboBox setBaud;
+		private System.Windows.Forms.ComboBox dongleSelect;
 		
 		/// <summary>
 		/// Disposes resources used by the form.
@@ -68,8 +70,10 @@ namespace CH340_interface
 			this.setbtn = new System.Windows.Forms.Button();
 			this.rescanbtn = new System.Windows.Forms.Button();
 			this.usernametxtbox = new System.Windows.Forms.TextBox();
-			this.cryptoOPT = new System.Windows.Forms.CheckBox();
 			this.passwordbox = new System.Windows.Forms.TextBox();
+			this.encryptOption = new System.Windows.Forms.ComboBox();
+			this.setBaud = new System.Windows.Forms.ComboBox();
+			this.dongleSelect = new System.Windows.Forms.ComboBox();
 			this.SuspendLayout();
 			// 
 			// portcombobox
@@ -123,7 +127,7 @@ namespace CH340_interface
 			this.txtextbox.Location = new System.Drawing.Point(95, 206);
 			this.txtextbox.MaxLength = 128;
 			this.txtextbox.Name = "txtextbox";
-			this.txtextbox.Size = new System.Drawing.Size(377, 20);
+			this.txtextbox.Size = new System.Drawing.Size(506, 20);
 			this.txtextbox.TabIndex = 4;
 			this.txtextbox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.enter_KeyPress);
 			// 
@@ -134,7 +138,7 @@ namespace CH340_interface
 			this.rxtextbox.Name = "rxtextbox";
 			this.rxtextbox.ReadOnly = true;
 			this.rxtextbox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.rxtextbox.Size = new System.Drawing.Size(377, 133);
+			this.rxtextbox.Size = new System.Drawing.Size(506, 133);
 			this.rxtextbox.TabIndex = 5;
 			// 
 			// ratecombobox
@@ -324,7 +328,7 @@ namespace CH340_interface
 			// 
 			// setbtn
 			// 
-			this.setbtn.Location = new System.Drawing.Point(397, 152);
+			this.setbtn.Location = new System.Drawing.Point(526, 175);
 			this.setbtn.Name = "setbtn";
 			this.setbtn.Size = new System.Drawing.Size(75, 23);
 			this.setbtn.TabIndex = 12;
@@ -344,27 +348,16 @@ namespace CH340_interface
 			// 
 			// usernametxtbox
 			// 
-			this.usernametxtbox.Location = new System.Drawing.Point(333, 178);
+			this.usernametxtbox.Location = new System.Drawing.Point(446, 151);
 			this.usernametxtbox.MaxLength = 8;
 			this.usernametxtbox.Name = "usernametxtbox";
-			this.usernametxtbox.Size = new System.Drawing.Size(58, 20);
+			this.usernametxtbox.Size = new System.Drawing.Size(74, 20);
 			this.usernametxtbox.TabIndex = 14;
 			this.usernametxtbox.Text = "user";
 			// 
-			// cryptoOPT
-			// 
-			this.cryptoOPT.Checked = true;
-			this.cryptoOPT.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.cryptoOPT.Location = new System.Drawing.Point(332, 151);
-			this.cryptoOPT.Name = "cryptoOPT";
-			this.cryptoOPT.Size = new System.Drawing.Size(59, 24);
-			this.cryptoOPT.TabIndex = 15;
-			this.cryptoOPT.Text = "DES";
-			this.cryptoOPT.UseVisualStyleBackColor = true;
-			// 
 			// passwordbox
 			// 
-			this.passwordbox.Location = new System.Drawing.Point(398, 179);
+			this.passwordbox.Location = new System.Drawing.Point(446, 177);
 			this.passwordbox.MaxLength = 32;
 			this.passwordbox.Name = "passwordbox";
 			this.passwordbox.PasswordChar = '*';
@@ -372,13 +365,57 @@ namespace CH340_interface
 			this.passwordbox.TabIndex = 16;
 			this.passwordbox.Text = "pass";
 			// 
+			// encryptOption
+			// 
+			this.encryptOption.FormattingEnabled = true;
+			this.encryptOption.Items.AddRange(new object[] {
+			"None",
+			"DES",
+			"RC5",
+			"Other"});
+			this.encryptOption.Location = new System.Drawing.Point(526, 151);
+			this.encryptOption.Name = "encryptOption";
+			this.encryptOption.Size = new System.Drawing.Size(75, 21);
+			this.encryptOption.TabIndex = 17;
+			this.encryptOption.SelectedIndexChanged += new System.EventHandler(this.EncryptOptionSelectedIndexChanged);
+			// 
+			// setBaud
+			// 
+			this.setBaud.FormattingEnabled = true;
+			this.setBaud.Items.AddRange(new object[] {
+			"4800",
+			"9600",
+			"14400",
+			"19200",
+			"38400",
+			"115200"});
+			this.setBaud.Location = new System.Drawing.Point(332, 151);
+			this.setBaud.Name = "setBaud";
+			this.setBaud.Size = new System.Drawing.Size(76, 21);
+			this.setBaud.TabIndex = 18;
+			this.setBaud.Text = "Baud";
+			// 
+			// dongleSelect
+			// 
+			this.dongleSelect.FormattingEnabled = true;
+			this.dongleSelect.Items.AddRange(new object[] {
+			"SE8R01",
+			"NRF24L01"});
+			this.dongleSelect.Location = new System.Drawing.Point(332, 178);
+			this.dongleSelect.Name = "dongleSelect";
+			this.dongleSelect.Size = new System.Drawing.Size(76, 21);
+			this.dongleSelect.TabIndex = 19;
+			this.dongleSelect.Text = "Device";
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(484, 243);
+			this.ClientSize = new System.Drawing.Size(613, 243);
+			this.Controls.Add(this.dongleSelect);
+			this.Controls.Add(this.setBaud);
+			this.Controls.Add(this.encryptOption);
 			this.Controls.Add(this.passwordbox);
-			this.Controls.Add(this.cryptoOPT);
 			this.Controls.Add(this.usernametxtbox);
 			this.Controls.Add(this.rescanbtn);
 			this.Controls.Add(this.setbtn);

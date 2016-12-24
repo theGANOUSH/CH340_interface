@@ -51,7 +51,8 @@ public partial class MainForm : Form
 		txtextbox.Enabled = false;
 		usernametxtbox.Enabled = true;
 		passwordbox.Enabled = true;
-		cryptoOPT.Enabled = true;
+		encryptOption.SelectedIndex = 0;
+		dongleSelect.SelectedIndex = 0;
 		
 		/*
 		* need to populate serial ports in dropdown when first starting
@@ -75,7 +76,7 @@ public partial class MainForm : Form
 	*/
 	void Button1Click(object sender, EventArgs e)
 	{
-		if(cryptoOPT.CheckState == CheckState.Checked && passwordbox.Text.Length < 8) {
+		if(encryptOption.SelectedIndex != 0 && passwordbox.Text.Length < 8) {
 			MessageBox.Show("Password must be a minimum of 8 characters", "ENCRYPTION ON", MessageBoxButtons.OK);
 			return;
 		}
@@ -95,7 +96,7 @@ public partial class MainForm : Form
 				baud = baudcombobox.SelectedIndex;
 				usernametxtbox.Enabled = false;
 				passwordbox.Enabled = false;
-				cryptoOPT.Enabled = false;
+				encryptOption.Enabled = false;
 
 				try {
 					COMport = new SerialPort(portcombobox.Text, baudr);
@@ -129,7 +130,7 @@ public partial class MainForm : Form
 				txtextbox.Enabled = false;
 				usernametxtbox.Enabled = true;
 				passwordbox.Enabled = true;
-				cryptoOPT.Enabled = true;
+				encryptOption.Enabled = true;
 			}
 		}
 		
@@ -227,7 +228,7 @@ public partial class MainForm : Form
 				SetTextCallback d = new SetTextCallback(SetText);
 				this.Invoke(d, new object[] { text });
 			} else {
-				if(cryptoOPT.CheckState == CheckState.Checked && AT_CMD_MODE == 0) {
+				if(encryptOption.SelectedIndex != 0 && AT_CMD_MODE == 0) {
 					this.rxtextbox.AppendText("DES--> "+Decrypt(text, passwordbox.Text));
 				} else if(AT_CMD_MODE == 1) {
 					this.rxtextbox.AppendText(text);
@@ -309,17 +310,17 @@ public partial class MainForm : Form
 		 */
 		void SendText(string text, int textmode)
 		{
-			if(textmode == 0 && cryptoOPT.CheckState == CheckState.Unchecked) {
+			if(textmode == 0 && encryptOption.SelectedIndex == 0) {
 				AT_CMD_MODE = 1;
 				COMport.WriteLine(text+"\r\n");
 				this.rxtextbox.AppendText(text+"\r\n");
 				Console.WriteLine("non crypto, unchecked");
-			} else if(textmode == 0 && cryptoOPT.CheckState == CheckState.Checked) {
+			} else if(textmode == 0 && encryptOption.SelectedIndex != 0) {
 				AT_CMD_MODE = 1;
 				COMport.WriteLine(text+"\r\n");
 				this.rxtextbox.AppendText(text+"\r\n");
 				Console.WriteLine("non crypto, checked");
-			} else if(textmode == 1 && cryptoOPT.CheckState == CheckState.Checked) {
+			} else if(textmode == 1 && encryptOption.SelectedIndex != 0) {
 				AT_CMD_MODE = 0;
 				var enc_text = Encrypt(usernametxtbox.Text+":> "+text, passwordbox.Text);
 //				var enc_text = Encrypt(text, passwordbox.Text);
@@ -327,7 +328,7 @@ public partial class MainForm : Form
 				COMport.WriteLine(enc_text+"\r\n");
 				this.rxtextbox.AppendText(usernametxtbox.Text+":> "+text+"\r\n");
 				this.rxtextbox.AppendText("DES<-- "+enc_text+"\r\n");
-			} else if(textmode == 1 && cryptoOPT.CheckState == CheckState.Unchecked) {
+			} else if(textmode == 1 && encryptOption.SelectedIndex == 0) {
 				AT_CMD_MODE = 0;
 				COMport.WriteLine(usernametxtbox.Text+":> "+text+"\r\n");
 				this.rxtextbox.AppendText(usernametxtbox.Text+":> "+text+"\r\n");
