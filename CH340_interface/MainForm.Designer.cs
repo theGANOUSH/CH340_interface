@@ -440,5 +440,14 @@ namespace CH340_interface
 			this.PerformLayout();
 
 		}
+		
+		private void EncryptOptionSelectedIndexChanged(object sender, EventArgs e)
+        	{
+			//Dummy EventHandler
+            		System.Windows.Forms.ComboBox encryptionOption = (System.Windows.Forms.ComboBox)sender;
+            		string selectedEncryptionOption = (string)encryptOption.SelectedItem;
+            		Console.WriteLine(selectedEncryptionOption);
+
+        	}
 	}
 }
